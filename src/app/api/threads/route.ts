@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { getEnv } from '@/lib/env';
 
 export const runtime = 'edge';
@@ -7,20 +8,19 @@ export async function GET() {
   try {
     const env = getEnv();
 
-    // DBの存在確認を追加
     if (!env.DB) {
-      console.error('Database is not available in GET /api/threads');
-      return Response.json({ error: 'Database not configured' }, { status: 500 });
+      console.error('Database is not available');
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
     const threads = await env.DB
       .prepare('SELECT * FROM threads ORDER BY created_at DESC')
       .all();
 
-    return Response.json(threads.results);
+    return NextResponse.json(threads.results);
   } catch (error) {
     console.error('Error in GET /api/threads:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -41,9 +41,9 @@ export async function POST(request: Request) {
       .bind(thread.id, thread.title, thread.created_at)
       .run();
 
-    return Response.json(thread);
+    return NextResponse.json(thread);
   } catch (error) {
     console.error('Error in POST /api/threads:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 } 

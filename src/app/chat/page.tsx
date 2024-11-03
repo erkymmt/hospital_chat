@@ -16,56 +16,34 @@ interface Thread {
   created_at: string
 }
 
-// チャット履歴の型を拡張
-interface ChatMessage {
-  id?: string;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: string;
-  created_at: string;
-}
-
-// メッセージの型を OpenAI 用に修正
-interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  thread_id?: string;
-}
-
-// 古いChatMessage定義を削除し、1つの定義にまとめる
-interface ChatMessage {
-  id?: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: string;
-  created_at: string;
-  thread_id?: string;
-}
-
-// ChatMessageインターフェースを2つに分割
-interface APIMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  thread_id?: string;
-}
-
-interface UIMessage {
-  id?: string;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: string;
-  created_at: string;
-}
-
 // レスポンスの型を定義
 interface AIResponse {
   content: string;
 }
 
+// APIとの通信用メッセージ型
+interface APIMessage {
+  role: 'user' | 'assistant' | 'system'
+  content: string
+  thread_id?: string
+}
+
+// UI表示用メッセージ型
+interface UIMessage {
+  id?: string
+  content: string
+  sender: 'user' | 'ai'
+  timestamp: string
+}
+
+// APIレスポンスの型定義を追加
+interface APIMessageResponse extends UIMessage {
+  created_at: string;
+}
+
 export default function Chat() {
   const [message, setMessage] = useState<string>('')
-  const [chatHistory, setChatHistory] = useState<Message[]>([])
+  const [chatHistory, setChatHistory] = useState<UIMessage[]>([])
   const [threads, setThreads] = useState<Thread[]>([])
   const [currentThread, setCurrentThread] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -100,11 +78,11 @@ export default function Chat() {
       try {
         const response = await fetch(`/api/messages?threadId=${currentThread}`);
         const data = await response.json();
-        setChatHistory((data as ChatMessage[]).map(msg => ({
+        setChatHistory((data as APIMessageResponse[]).map(msg => ({
           id: msg.id,
           content: msg.content,
           sender: msg.sender,
-          timestamp: msg.created_at
+          timestamp: msg.created_at  // サーバーからのタイムスタンプを使用
         })));
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -153,7 +131,18 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
-      // チャット履歴を OpenAI 形式に変換
+      // ユーザーメッセージを即時追加
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: message,
+        sender: 'user',
+        timestamp: new Date().toISOString()
+      };
+      setChatHistory(prev => [...prev, userMessage]);
+      
+      const currentMessage = message;
+      setMessage('');
+
       const messages: APIMessage[] = [
         ...chatHistory.map(msg => ({
           role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
@@ -162,12 +151,12 @@ export default function Chat() {
         })),
         {
           role: 'user',
-          content: message,
+          content: currentMessage,
           thread_id: currentThread
         }
       ];
 
-      const response = await fetch('/api/chat', {  // /api/messages から /api/chat に変更
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,25 +168,45 @@ export default function Chat() {
         throw new Error(`API error: ${response.status}`);
       }
 
-      const aiResponse = await response.json() as AIResponse;  // 型アサーションを追加
+      // 一時的な変数でメッセージを構築
+      let messageContent = '';
+      const aiMessageId = Date.now().toString();
 
-      // 新しいメッセージをチャット履歴に追加
-      setChatHistory(prev => [...prev,
-        {
-          id: Date.now().toString(),
-          content: message,
-          sender: 'user',
-          timestamp: new Date().toISOString()
-        },
-        {
-          id: (Date.now() + 1).toString(),
-          content: aiResponse.content,
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('レスポンスの読み取りに失敗した');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        const text = new TextDecoder().decode(value);
+        const lines = text.split('\n').filter(line => line.trim());
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.event === 'agent_message' && data.message) {
+                messageContent += data.message;
+              }
+            } catch (e) {
+              console.error('Failed to parse JSON:', e);
+            }
+          }
+        }
+      }
+
+      // ストリーミングが完了した後に1回だけメッセージを追加
+      if (messageContent) {
+        const aiMessage: Message = {
+          id: aiMessageId,
+          content: messageContent,
           sender: 'ai',
           timestamp: new Date().toISOString()
-        }
-      ]);
+        };
+        setChatHistory(prev => [...prev, aiMessage]);
+      }
 
-      setMessage('');
     } catch (error) {
       console.error('Error in handleSubmit:', error);
     } finally {

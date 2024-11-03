@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.5",
+    "jspdf": "^2.5.2",
     "nanoid": "^4.0.2",
     "next": "14.2.5",
     "openai": "^4.70.2",

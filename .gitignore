@@ -40,3 +40,5 @@ yarn-error.log*
 next-env.d.ts
 
 .next/cache/
+# .gitignoreに以下を追加
+.wrangler/.wrangler/

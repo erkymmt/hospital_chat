@@ -43,15 +43,32 @@ export async function POST(request: Request) {
     const thread_id = messages[0]?.thread_id || generateUUID();
     console.log('Thread ID:', thread_id); // デバッグ用
 
-    const chatResponse = await openai.chat.completions.create({
+    // ストリーミングを有効化
+    const stream = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: messages.map(msg => ({
         role: msg.role,
         content: msg.content
       })),
       temperature: 0.7,
+      stream: true
     });
-    console.log('OpenAI Response:', chatResponse); // デバッグ用
+
+    // ReadableStreamを作成
+    const textEncoder = new TextEncoder();
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const content = chunk.choices[0].delta.content || '';
+            controller.enqueue(textEncoder.encode(content));
+          }
+          controller.close();
+        } catch (error) {
+          controller.error(error);
+        }
+      }
+    });
 
     // DBチェック
     if (!env.DB) {
@@ -65,16 +82,18 @@ export async function POST(request: Request) {
     ).bind(
       generateUUID(),
       thread_id,
-      chatResponse.choices[0].message.role,
-      chatResponse.choices[0].message.content,
+      messages[0].role,
+      messages[0].content,
       new Date().toISOString()
     ).run();
     console.log('DB Response:', dbResponse); // デバッグ用
 
-    return Response.json({
-      role: chatResponse.choices[0].message.role,
-      content: chatResponse.choices[0].message.content,
-      thread_id
+    return new Response(readableStream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
     });
 
   } catch (error) {

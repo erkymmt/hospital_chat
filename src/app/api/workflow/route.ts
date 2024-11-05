@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server';
 
+// リクエストの型を定義
+interface WorkflowRequest {
+  inputs: {
+    [key: string]: any;
+  };
+}
+
 // POSTリクエストでワークフローを実行する部分
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    // 型アサーションを使用して、bodyの型を明示的に指定
+    const body = await req.json() as WorkflowRequest;
     console.log('Incoming request body:', body);
 
     const workflowUrl = `${process.env.NEXT_PUBLIC_DIFY_WORKFLOW_ENDPOINT}/workflows/run`;

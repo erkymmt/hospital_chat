@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Target, TrendingUp, Activity, Utensils, Moon } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
@@ -59,6 +60,20 @@ export default function NewPage() {
           <p className="mt-2 text-xs text-muted-foreground">今月の目標達成率</p>
         </CardContent>
       </Card>
+      <div className="mt-6 text-center space-x-4">
+        <Link 
+          href="/workflow" 
+          className="inline-block px-8 py-4 bg-gradient-to-r from-slate-600 to-slate-500 text-white rounded-xl hover:from-slate-700 hover:to-slate-600 transition-all duration-200 shadow-lg"
+        >
+          戻る
+        </Link>
+        <Link 
+          href="/data-record" 
+          className="inline-block px-8 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white rounded-xl hover:from-green-700 hover:to-green-600 transition-all duration-200 shadow-lg"
+        >
+          データ記録
+        </Link>
+      </div>
     </div>
   );
 }

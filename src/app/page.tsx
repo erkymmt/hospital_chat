@@ -119,8 +119,22 @@ export default function Chat() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-950 via-[#0A1A3B] to-blue-950">
-      <div className="container mx-auto p-6 max-w-3xl">
+    <div className="min-h-screen flex bg-gradient-to-b from-blue-950 via-[#0A1A3B] to-blue-950">
+      {/* メニューバー */}
+      <div className="w-64 bg-gray-800 text-white p-6 space-y-4">
+        <h2 className="text-xl font-bold">メニュー</h2>
+        <nav className="space-y-2">
+          <Link href="/" className="block px-4 py-2 rounded hover:bg-gray-700">問診</Link>
+          <Link href="/workflow" className="block px-4 py-2 rounded hover:bg-gray-700">プラン作成</Link>
+          <Link href="/new-page" className="block px-4 py-2 rounded hover:bg-gray-700">月間目標</Link>
+          <Link href="/data-record" className="block px-4 py-2 rounded hover:bg-gray-700">データ記録</Link>
+          <Link href="/graph" className="block px-4 py-2 rounded hover:bg-gray-700">トレンド</Link>
+          {/* 他のリンクを追加 */}
+        </nav>
+      </div>
+
+      {/* メインコンテンツ */}
+      <div className="flex-1 container mx-auto p-6 max-w-3xl">
         {/* タイトル */}
         <h1 className="text-3xl font-bold text-center mb-6 text-gray-800 p-6 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg">
           生活習慣病管理システム

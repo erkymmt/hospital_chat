@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -122,60 +123,75 @@ export default function DataRecordChat() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-blue-950 via-[#0A1A3B] to-blue-950">
-      <h1 className="text-3xl font-bold p-4 text-center text-gray-100">データ記録</h1>
-      <div className="flex-1 overflow-y-auto p-4">
-        <div className="max-w-3xl mx-auto space-y-4">
-          {messages.map((message, index) => (
-            <div key={index} className={message.role === 'user' ? 'text-right' : 'text-left'}>
-              <div className={`inline-block p-2 rounded-lg ${
-                message.role === 'user' 
-                  ? 'bg-blue-500 text-white' 
-                  : 'bg-white text-gray-900 border border-gray-200'
-              }`}>
-                <div className="whitespace-pre-wrap">{message.content}</div>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
-        </div>
+    <div className="min-h-screen flex bg-gradient-to-b from-blue-950 via-[#0A1A3B] to-blue-950">
+      {/* メニューバー */}
+      <div className="w-64 bg-gray-800 text-white p-6 space-y-4">
+        <h2 className="text-xl font-bold">メニュー</h2>
+        <nav className="space-y-2">
+          <Link href="/" className="block px-4 py-2 rounded hover:bg-gray-700">問診</Link>
+          <Link href="/workflow" className="block px-4 py-2 rounded hover:bg-gray-700">プラン作成</Link>
+          <Link href="/new-page" className="block px-4 py-2 rounded hover:bg-gray-700">月間目標</Link>
+          <Link href="/data-record" className="block px-4 py-2 rounded hover:bg-gray-700">データ記録</Link>
+          <Link href="/graph" className="block px-4 py-2 rounded hover:bg-gray-700">トレンド</Link>
+        </nav>
       </div>
 
-      <div className="border-t bg-white">
-        <div className="max-w-3xl mx-auto p-4">
-          <form onSubmit={handleSubmit} className="flex gap-4">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="メッセージを入力..."
-              className="flex-1 p-2 border rounded text-gray-900"
-            />
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`px-4 py-2 rounded font-medium transition-all duration-200 ${
-                isLoading 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-800 hover:to-slate-700'
-              } text-white shadow-lg`}
-            >
-              送信
-            </button>
-          </form>
-          <div className="mt-4 text-center space-y-2">
-            <button
-              onClick={() => router.push('/')}
-              className="px-4 py-2 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
-            >
-              トップページに戻る
-            </button>
-            <button
-              onClick={() => router.push('/new-page')}
-              className="px-4 py-2 text-sm bg-gradient-to-r from-slate-600 to-slate-500 text-white rounded hover:from-slate-700 hover:to-slate-600"
-            >
-              月間データに戻る
-            </button>
+      {/* メインコンテンツ */}
+      <div className="flex-1 flex flex-col">
+        <h1 className="text-3xl font-bold p-4 text-center text-gray-100">データ記録</h1>
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-3xl mx-auto space-y-4">
+            {messages.map((message, index) => (
+              <div key={index} className={message.role === 'user' ? 'text-right' : 'text-left'}>
+                <div className={`inline-block p-2 rounded-lg ${
+                  message.role === 'user' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-white text-gray-900 border border-gray-200'
+                }`}>
+                  <div className="whitespace-pre-wrap">{message.content}</div>
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        <div className="border-t bg-white">
+          <div className="max-w-3xl mx-auto p-4">
+            <form onSubmit={handleSubmit} className="flex gap-4">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="メッセージを入力..."
+                className="flex-1 p-2 border rounded text-gray-900"
+              />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className={`px-4 py-2 rounded font-medium transition-all duration-200 ${
+                  isLoading 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-800 hover:to-slate-700'
+                } text-white shadow-lg`}
+              >
+                送信
+              </button>
+            </form>
+            <div className="mt-4 text-center space-y-2 flex gap-4 justify-center">
+              <button
+                onClick={() => router.push('/new-page')}
+                className="flex-1 px-4 py-2 text-sm bg-gradient-to-r from-slate-600 to-slate-500 text-white rounded hover:from-slate-700 hover:to-slate-600 min-h-[40px]"
+              >
+                月間目標に戻る
+              </button>
+              <button
+                onClick={() => router.push('/graph')}
+                className="flex-1 px-4 py-2 text-sm bg-gradient-to-r from-slate-600 to-slate-500 text-white rounded hover:from-slate-700 hover:to-slate-600 min-h-[40px]"
+              >
+                トレンド
+              </button>
+            </div>
           </div>
         </div>
       </div>
